@@ -102,32 +102,46 @@
       reader.readAsText(file);
     });
 
-    // Volume button exit logic (browser support limited)
-    window.addEventListener("keydown", e => {
-      if (e.code === "AudioVolumeUp") {
-        volumeUpPressed = true;
-        checkHold();
-      }
-      if (e.code === "AudioVolumeDown") {
-        volumeDownPressed = true;
-        checkHold();
-      }
-    });
-    window.addEventListener("keyup", e => {
-      if (e.code === "AudioVolumeUp") volumeUpPressed = false;
-      if (e.code === "AudioVolumeDown") volumeDownPressed = false;
-      holdStart = null;
-    });
+let shakeCount = 0;
+let lastShakeTime = 0;
+let shakeTimeout;
 
-    function checkHold() {
-      if (volumeUpPressed && volumeDownPressed) {
-        if (!holdStart) holdStart = Date.now();
-        else if (Date.now() - holdStart >= 2000) {
-          loadMenu();
-          volumeUpPressed = volumeDownPressed = false;
-          holdStart = null;
-        }
-      }
+function handleMotion(event) {
+  const acc = event.acceleration;
+
+  if (acc && (Math.abs(acc.x) > 15 || Math.abs(acc.y) > 15 || Math.abs(acc.z) > 15)) {
+    const now = Date.now();
+
+    // Reset count if more than 2 seconds since last shake
+    if (now - lastShakeTime > 2000) {
+      shakeCount = 0;
+    }
+
+    shakeCount++;
+    lastShakeTime = now;
+
+    console.log(`Shake detected! Count: ${shakeCount}`);
+
+    if (shakeCount >= 3) {
+      exitToMenu();
+      shakeCount = 0;
+    }
+
+    // Clear shake count after 2 seconds
+    clearTimeout(shakeTimeout);
+    shakeTimeout = setTimeout(() => { shakeCount = 0; }, 2000);
+  }
+}
+
+function exitToMenu() {
+  loadMenu();
+}
+
+if (window.DeviceMotionEvent) {
+  window.addEventListener('devicemotion', handleMotion);
+} else {
+  console.log("DeviceMotion not supported on this device/browser.");
+}
     }
 
     // Initial load
