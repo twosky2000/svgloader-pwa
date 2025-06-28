@@ -10,7 +10,7 @@
         padding: 0;
         height: 100%;
         width: 100%;
-        overflow: hidden; /* Prevent scroll */
+        overflow: hidden;
       }
       .button {
         width: 33.33%;
@@ -28,7 +28,7 @@
         height: 100%;
         float: left;
         background: #eee;
-        font-size: 48px;
+        font-size: 36px;
         color: #333;
         text-align: center;
         line-height: normal;
@@ -37,48 +37,50 @@
         justify-content: center;
       }
       .score div {
-        margin: 20px;
+        margin: 10px;
       }
     </style>
   </head>
   <body>
     <div class="button" id="left">Left</div>
     <div class="score">
-      <div id="cps">CPS: 0</div>
+      <div id="run">Run: 0</div>
+      <div id="distance">Distance: 0</div>
       <div id="total">Total: 0</div>
     </div>
     <div class="button" id="right">Right</div>
 
     <script>
       let totalClicks = 0;
-      let clickTimes = [];
-      let lastPressed = null; // Track which button was last pressed
+      let distance = 0;
+      let run = 0;
+      let lastPressed = null;
 
       function updateCounters() {
-        const now = Date.now();
-        clickTimes = clickTimes.filter(t => now - t <= 1000);
-        document.getElementById("cps").innerText = "CPS: " + clickTimes.length;
+        document.getElementById("run").innerText = "Run: " + run;
+        document.getElementById("distance").innerText = "Distance: " + distance;
         document.getElementById("total").innerText = "Total: " + totalClicks;
       }
 
       function registerClick(side) {
-        if (lastPressed === side) {
-          // Same side pressed twice, do not count
-          console.log("Must alternate sides!");
-          return;
-        }
         totalClicks++;
-        clickTimes.push(Date.now());
-        updateCounters();
+
+        if (lastPressed && lastPressed !== side) {
+          run++;
+          distance++;
+        } else {
+          run = 1; // reset run if same side pressed twice or first click
+          if (!lastPressed) distance++; // count first click as distance if starting
+        }
+
         lastPressed = side;
+        updateCounters();
       }
 
       document.getElementById("left").addEventListener("click", () => registerClick("left"));
       document.getElementById("right").addEventListener("click", () => registerClick("right"));
 
-      setInterval(updateCounters, 100);
-
-      // Request fullscreen on load or user interaction (some browsers require gesture)
+      // Fullscreen request on user interaction
       document.body.addEventListener("click", () => {
         if (!document.fullscreenElement) {
           document.documentElement.requestFullscreen().catch(err => {
@@ -86,6 +88,8 @@
           });
         }
       });
+
+      updateCounters();
     </script>
   </body>
 </html>
