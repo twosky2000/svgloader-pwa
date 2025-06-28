@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Counter</title>
+    <style>
+      html, body { margin:0; padding:0; height:100%; width:100%; }
+      .button {
+        width: 33.33%;
+        height: 100%;
+        float: left;
+        background: #4CAF50;
+        font-size: 48px;
+        color: #fff;
+        text-align: center;
+        line-height: 720px;
+        user-select: none;
+      }
+      .score {
+        width: 33.33%;
+        height: 100%;
+        float: left;
+        background: #eee;
+        font-size: 48px;
+        color: #333;
+        text-align: center;
+        line-height: 360px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="button" id="left">Left</div>
+    <div class="score">
+      <div id="cps">CPS: 0</div>
+      <div id="total">Total: 0</div>
+    </div>
+    <div class="button" id="right">Right</div>
+
+    <script>
+      let totalClicks = 0;
+      let clickTimes = [];
+
+      function updateCounters() {
+        const now = Date.now();
+        clickTimes = clickTimes.filter(t => now - t <= 1000);
+        document.getElementById("cps").innerText = "CPS: " + clickTimes.length;
+        document.getElementById("total").innerText = "Total: " + totalClicks;
+      }
+
+      function registerClick() {
+        totalClicks++;
+        clickTimes.push(Date.now());
+        updateCounters();
+      }
+
+      document.getElementById("left").addEventListener("click", registerClick);
+      document.getElementById("right").addEventListener("click", registerClick);
+
+      setInterval(updateCounters, 100);
+    </script>
+  </body>
+</html>
