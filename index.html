@@ -1,155 +1,91 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SVG PWA Menu</title>
-  <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; font-family:sans-serif; }
-    #menu, #display { display:none; height:100%; }
-    #menu { padding:20px; box-sizing: border-box; }
-    textarea {
-      width: 100%;
-      height: 33vh;
-      font-family: monospace;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-    #svgList button {
-      display: block;
-      margin: 5px 0;
-    }
-  </style>
-</head>
-<body>
-  <div id="menu">
-    <h1>SVG Loader Menu</h1>
-
-    <!-- Multiline Text Input -->
-    <textarea id="svgInput" placeholder="Paste SVG text here..."></textarea><br>
-    <button id="addSvgBtn">Add to storage</button><br><br>
-
-    <!-- File Input Loader -->
-    <input type="file" id="fileInput" accept=".svg"><br><br>
-
-    <!-- SVG List -->
-    <ul id="svgList"></ul>
-  </div>
-
-  <div id="display">
-    <div id="svgContainer"></div>
-  </div>
-
-  <script>
-    const menu = document.getElementById("menu");
-    const display = document.getElementById("display");
-    const svgList = document.getElementById("svgList");
-    const svgContainer = document.getElementById("svgContainer");
-    const fileInput = document.getElementById("fileInput");
-    const svgInput = document.getElementById("svgInput");
-    const addSvgBtn = document.getElementById("addSvgBtn");
-
-    let volumeUpPressed = false;
-    let volumeDownPressed = false;
-    let holdStart = null;
-
-    function loadMenu() {
-      svgList.innerHTML = "";
-      for (let key in localStorage) {
-        if (localStorage.hasOwnProperty(key) && key.startsWith("svg_")) {
-          const li = document.createElement("li");
-          const btn = document.createElement("button");
-          btn.textContent = key.replace("svg_", "");
-          btn.onclick = () => displaySVG(key);
-          li.appendChild(btn);
-          svgList.appendChild(li);
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Counter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden; /* Prevent scroll */
       }
-      menu.style.display = "block";
-      display.style.display = "none";
-    }
-
-    function displaySVG(key) {
-      svgContainer.innerHTML = localStorage.getItem(key);
-      menu.style.display = "none";
-      display.style.display = "block";
-    }
-
-    // Add SVG from textarea
-    addSvgBtn.addEventListener("click", () => {
-      const svgText = svgInput.value.trim();
-      if (svgText) {
-        const name = prompt("Enter name for SVG:");
-        if (name) {
-          localStorage.setItem("svg_" + name, svgText);
-          svgInput.value = "";
-          loadMenu();
-        }
+      .button {
+        width: 33.33%;
+        height: 100%;
+        float: left;
+        background: #4CAF50;
+        font-size: 48px;
+        color: #fff;
+        text-align: center;
+        line-height: 720px;
+        user-select: none;
       }
-    });
+      .score {
+        width: 33.33%;
+        height: 100%;
+        float: left;
+        background: #eee;
+        font-size: 48px;
+        color: #333;
+        text-align: center;
+        line-height: normal;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .score div {
+        margin: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="button" id="left">Left</div>
+    <div class="score">
+      <div id="cps">CPS: 0</div>
+      <div id="total">Total: 0</div>
+    </div>
+    <div class="button" id="right">Right</div>
 
-    // File input loader
-    fileInput.addEventListener("change", e => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        const name = prompt("Enter name for SVG:");
-        if (name) {
-          localStorage.setItem("svg_" + name, evt.target.result);
-          loadMenu();
+    <script>
+      let totalClicks = 0;
+      let clickTimes = [];
+      let lastPressed = null; // Track which button was last pressed
+
+      function updateCounters() {
+        const now = Date.now();
+        clickTimes = clickTimes.filter(t => now - t <= 1000);
+        document.getElementById("cps").innerText = "CPS: " + clickTimes.length;
+        document.getElementById("total").innerText = "Total: " + totalClicks;
+      }
+
+      function registerClick(side) {
+        if (lastPressed === side) {
+          // Same side pressed twice, do not count
+          console.log("Must alternate sides!");
+          return;
         }
-      };
-      reader.readAsText(file);
-    });
+        totalClicks++;
+        clickTimes.push(Date.now());
+        updateCounters();
+        lastPressed = side;
+      }
 
-let shakeCount = 0;
-let lastShakeTime = 0;
-let shakeTimeout;
+      document.getElementById("left").addEventListener("click", () => registerClick("left"));
+      document.getElementById("right").addEventListener("click", () => registerClick("right"));
 
-function handleMotion(event) {
-  const acc = event.acceleration;
+      setInterval(updateCounters, 100);
 
-  if (acc && (Math.abs(acc.x) > 15 || Math.abs(acc.y) > 15 || Math.abs(acc.z) > 15)) {
-    const now = Date.now();
-
-    // Reset count if more than 2 seconds since last shake
-    if (now - lastShakeTime > 2000) {
-      shakeCount = 0;
-    }
-
-    shakeCount++;
-    lastShakeTime = now;
-
-    console.log(`Shake detected! Count: ${shakeCount}`);
-
-    if (shakeCount >= 3) {
-      exitToMenu();
-      shakeCount = 0;
-    }
-
-    // Clear shake count after 2 seconds
-    clearTimeout(shakeTimeout);
-    shakeTimeout = setTimeout(() => { shakeCount = 0; }, 2000);
-  }
-}
-
-function exitToMenu() {
-  loadMenu();
-}
-
-if (window.DeviceMotionEvent) {
-  window.addEventListener('devicemotion', handleMotion);
-} else {
-  console.log("DeviceMotion not supported on this device/browser.");
-}
-
-    // Initial load
-    loadMenu();
-
-    // Service Worker registration for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js');
-    }
-  </script>
-</body>
+      // Request fullscreen on load or user interaction (some browsers require gesture)
+      document.body.addEventListener("click", () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(err => {
+            console.log("Fullscreen error:", err);
+          });
+        }
+      });
+    </script>
+  </body>
 </html>
