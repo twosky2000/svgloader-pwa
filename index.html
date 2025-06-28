@@ -77,9 +77,18 @@
         updateCounters();
       }
 
-      document.getElementById("left").addEventListener("click", () => registerClick("left"));
-      document.getElementById("right").addEventListener("click", () => registerClick("right"));
+      
+function setupButtonEvents(id, side) {
+  const el = document.getElementById(id);
+  el.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    registerClick(side);
+  }, { passive: false });
+  el.addEventListener("mousedown", () => registerClick(side));
+}
 
+setupButtonEvents("left", "left");
+setupButtonEvents("right", "right");
       // Fullscreen request on user interaction
       document.body.addEventListener("click", () => {
         if (!document.fullscreenElement) {
